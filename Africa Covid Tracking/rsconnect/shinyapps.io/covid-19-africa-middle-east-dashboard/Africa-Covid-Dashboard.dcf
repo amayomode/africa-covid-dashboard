@@ -1,0 +1,13 @@
+name: Africa-Covid-Dashboard
+title: Africa-Covid-Dashboard
+username:
+account: covid-19-africa-middle-east-dashboard
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2259372
+bundleId: 3148135
+url: https://covid-19-africa-middle-east-dashboard.shinyapps.io/Africa-Covid-Dashboard/
+when: 1589478629.37752
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: plots.R

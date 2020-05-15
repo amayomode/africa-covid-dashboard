@@ -5,62 +5,112 @@ library(dplyr)
 library(ggplot2)  
 library(ggrepel)
 library(DT)
+library(plotly)
 library(scales)
+country_names<- read.csv('country.csv')
 
 ui <- dashboardPage(
-    dashboardHeader(title = "Covid Dashboard"),
+    dashboardHeader(title = "Dashboard"),
     dashboardSidebar(
         sidebarMenu(
             menuItem("Raw Data", tabName = "dashboard", icon = icon("dashboard")),
-            menuItem("World Map", tabName = "world", icon = icon("globe")),
-            menuItem("Africa Map", tabName = "africa_map", icon = icon("flag")),
-            menuItem('Disease Progression', tabName = 'progress',icon=icon('chevron-right')),
+            menuItem("Disease Trends", tabName = "trends", icon = icon("chevron-right")),
+            menuItem("Maps", tabName = "map", icon = icon("map")),
+            menuItem("Control Measures", tabName = "control", icon = icon("table")),
             menuItem('About', tabName = 'about',icon=icon('book'))
         )
     ),
     dashboardBody(
+        # css
+        tags$head(
+            tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
+        ),
         tabItems(
             # Raw data content
             tabItem(tabName = "dashboard",
                 fluidRow(
-                    h2("Covid-19 In Africa And The Middle East"),
-                    br(nrows=1)
+                    box(title = "Covid-19 In Africa And The Middle East",
+                        solidHeader = TRUE, width = 12, status = "primary",
+                        # display total cases
+                        valueBoxOutput("new_cases"),
+                        valueBoxOutput("confirmed"),
+                        valueBoxOutput("deaths"),
+                        valueBoxOutput("recoveries"),
+                    ),
+
                 ),
                 fluidRow(
-                    # display total cases
-                    valueBoxOutput("new_cases"),
-                    valueBoxOutput("confirmed"),
-                    valueBoxOutput("deaths"),
-                    valueBoxOutput("recoveries"),
-                    
-                    column(12, div(dataTableOutput("dataTable")))
+                      box(title="Raw Data",status = "primary",solidHeader = TRUE ,width = 12, style = "overflow-y: scroll;overflow-x: scroll;",
+                           dataTableOutput("dataTable"),
+                      )
                 )
             ),
+        
+            # Disease Trend content
+            tabItem(tabName = "trends",
+                    fluidRow(
+                        box(title='General Disease Trend',width = 12,solidHeader = TRUE,status='primary',style = "overflow-y: scroll;overflow-x: scroll;",
+                            plotlyOutput("general_trend", width = "100%", height = "550px"),
+                        )
+                    ),
+                    fluidRow(
+                        box(title='Country Specific Trend',width = 12,solidHeader = TRUE,status='success',style = "overflow-y: scroll;overflow-x: scroll;",
+                            selectInput("country",
+                                        "Country:",
+                                        c(unique(as.character(country_names$x)))),
+                            plotlyOutput("country_trend",width = "100%", height = "550px"),
+                        )
+                    ),
+                    fluidRow(
+                        box(title='Stripe Plot',width = 12,solidHeader = TRUE,status='info',style = "overflow-y: scroll;overflow-x: scroll;",
+                            plotOutput("progression",width = "100%", height = "550px")
+                        )
+                    )
+            ),
             
-            # World map content
-            tabItem(tabName = "world",
-                    fluidPage(
-                        valueBoxOutput("w_confirmed"),
-                        valueBoxOutput("w_deaths"),
-                        valueBoxOutput("w_recoveries"),
-                        
-                        plotOutput("worldplot",width = "100%", height = "550px")
+            # map content
+            tabItem(tabName = "map",
+                    fluidRow(
+                        box(title = "Covid-19 Maps",
+                            solidHeader = TRUE, width = 12, status = "primary",
+                            valueBoxOutput("a_confirmed"),
+                            valueBoxOutput("a_deaths"),
+                            valueBoxOutput("a_recoveries"),
+                        ),
+                    ),
+                    fluidRow(
+                        box(title = "Africa",
+                            solidHeader = TRUE, width = 12, status = "primary",
+                            plotOutput("africa",width = "500px", height = "550px"), align="center",style = "overflow-y: scroll;overflow-x: scroll;"
+                        )
+                    ),
+                    fluidRow(
+                        box(title = "Middle East",
+                            solidHeader = TRUE, width = 12, status = "info",
+                            plotOutput("mdd_east",width = "500px", height = "550px"), align="center",style = "overflow-y: scroll;overflow-x: scroll;"
+                        )
                     )
             ),
-            # Africa map content
-            tabItem(tabName = "africa_map",
-                    fluidPage(
-                        valueBoxOutput("a_confirmed"),
-                        valueBoxOutput("a_deaths"),
-                        valueBoxOutput("a_recoveries"),
-                        
-                        plotOutput("africa",width = "100%", height = "550px")
-                    )
-            ),
-            # Disease progression content
-            tabItem(tabName = "progress",
-                    fluidPage(
-                        plotOutput("progression",width = "100%", height = "550px")
+            
+            #control masures tab
+            tabItem(tabName = "control",
+                    fluidRow(
+                        box(title='Social Distancing',width = 12,solidHeader = TRUE,status='primary',style = "overflow-y: scroll;overflow-x: scroll;",
+                            plotOutput("social_distancing",width = "100%", height = "550px")
+                        )
+                    ),
+                    fluidRow(
+                        box(title='Lockdown',width = 12,solidHeader = TRUE,status='info',style = "overflow-y: scroll;overflow-x: scroll;",
+                            plotOutput("lock_down",width = "100%", height = "550px")
+                        )
+                    ),fluidRow(
+                        box(title='Movement Restriction',width = 12,solidHeader = TRUE,status='success',style = "overflow-y: scroll;overflow-x: scroll;",
+                            plotOutput("mvt_restriction",width = "100%", height = "550px")
+                        )
+                    ),fluidRow(
+                        box(title='Public Health',width = 12,solidHeader = TRUE,status='warning',style = "overflow-y: scroll;overflow-x: scroll;",
+                            plotOutput("pub_health",width = "100%", height = "550px")
+                        )
                     )
             ),
             
@@ -103,7 +153,8 @@ ui <- dashboardPage(
                     fluidRow(
                       h3('Creators'),
                       p('This Dashboard has been created by the collaborative efforts of Amayo Mordecai and Andove Brandel.'),
-                      p('We are medical students at', tags$a(href ='https://www.uonbi.ac.ke/','The University of Nairobi'), 'and the goal behind this is to provide an easy access to COVID-19 related data for Africa and the Middle East as there are few sources offereing this service currently.')
+                      p('We are medical students at', tags$a(href ='https://www.uonbi.ac.ke/','The University of Nairobi'), 'and the goal behind this project is to enable an easy access to COVID-19 related data for Africa and the Middle East as there are few sources offereing this service currently.'),
+                      p('For any question or feedback, you can either open an', tags$a(href ='https://github.com/amayomode/africa-covid-dashboard','issue'), 'or contact us on', tags$a(href='https://twitter.com/amayo_mordecai','Twitter.'))
                     )
             )
         )
@@ -141,24 +192,57 @@ server <- function(input, output) {
     filtered_dta <-  merged_dta[grepl("Africa", merged_dta$region), mult="last"]
     
     sumary_dta <- filtered_dta %>% 
-        select(country, confirmed, deaths, recovered, timestamp) %>% 
+        select(country, confirmed, deaths, recovered) %>% 
         group_by(country) %>% 
-        summarise(Date = as.Date(last(timestamp),format = "%m/%d/%y"), Cases = last(confirmed), Deaths=last(deaths), Recoveries=last(recovered), New_Cases = diff(tail(confirmed, n=2L)))
+        summarise(New_Cases =diff(tail(confirmed,3)[-3]), 
+                  Cases = tail(confirmed,2)[-2], 
+                  Deaths=tail(deaths,2)[-2], 
+                  Recoveries=tail(recovered,2)[-2])
     
-    world_dta <- merged_dta %>% 
-        select(country, confirmed, deaths, recovered,) %>% 
-        group_by(country) %>% 
-        summarise(Cases = last(confirmed), Deaths=last(deaths), Recoveries=last(recovered))
+    #trend data
+    plot_data <- filtered_dta %>% select(country,date, confirmed,deaths,recovered)%>%
+        group_by(date) %>% 
+        summarise(cases=sum(confirmed), 
+                  deaths=sum(deaths),
+                  recovered=sum(recovered))
     
-    #render the data in atable
+    #Outputs
+    
+    # 1. Raw data
+    
+    # 1.1 render the data in a table
+    last_date <-  as.Date(tail(filtered_dta$date,2)[-2],format = "%m/%d/%y")
     output$dataTable <- renderDT(
         sumary_dta, # data
         class = "display nowrap compact", # style
-        options = list(lengthMenu = c(5, 30, 50), pageLength = 25)
+        rownames = FALSE,
+        caption = htmltools::tags$caption(
+            style = 'caption-side: top; text-align: left;',
+            paste("Last updated", last_date)
+        ),
+        colnames = c('Country','New Cases','Confirmed Cases', 'Total Deaths', 'Recoveries'),
+        options = list(pageLength = 25)
     )
     
-    # render the total cases values 
+    # 1.2 render the total cases values in value boxes 
     output$new_cases <- renderValueBox({
+        
+        #Create a Progress object
+        progress <- shiny::Progress$new()
+        progress$set(message = "Fetching data", value = 0)
+        # Close the progress when this reactive exits (even if there's an error)
+        on.exit(progress$close())
+        updateProgress <- function(value = NULL, detail = NULL) {
+            if (is.null(value)) {
+                value <- progress$getValue()
+                value <- value + (progress$getMax() - value) / 5
+            }
+            progress$set(value = value, detail = detail)
+        }
+        
+        # Compute the new data, and pass in the updateProgress function so
+        # that it can update the progress indicator.
+        compute_data(updateProgress)
         valueBox(
             paste0(comma(sum(sumary_dta$New_Cases))), "New Cases", icon = icon("plus"),
             color = "purple"
@@ -183,24 +267,91 @@ server <- function(input, output) {
         )
     })
     
-    output$w_confirmed <- renderValueBox({
-        valueBox(
-            paste0(comma(sum(world_dta$Cases))), "Total Cases", icon = icon("hospital"),
-            color = "yellow", width = 6
+    # 2 Disease trends
+    
+    #2.1Trend graphs
+    
+    # 2.1.1 general trend
+    output$general_trend <- renderPlotly({
+        
+        #Create a Progress object
+        progress <- shiny::Progress$new()
+        progress$set(message = "Generating plots", value = 0)
+        # Close the progress when this reactive exits (even if there's an error)
+        on.exit(progress$close())
+        updateProgress <- function(value = NULL, detail = NULL) {
+            if (is.null(value)) {
+                value <- progress$getValue()
+                value <- value + (progress$getMax() - value) / 5
+            }
+            progress$set(value = value, detail = detail)
+        }
+        
+        # Compute the new data, and pass in the updateProgress function so
+        # that it can update the progress indicator.
+        compute_data(updateProgress)
+        
+        #plot
+        plot_ly(plot_data, x = ~date) %>%
+            add_trace(y = ~deaths, name = "Deaths", visible = T,type='scatter',mode='lines',color=I("#A93226")) %>%
+            add_trace(y = ~cases, name = "Cases", visible = F, type='scatter',mode='lines',color=I("#D4AC0D")) %>%
+            add_trace(y = ~recovered, name = "Recoveries", visible = F, type='scatter',mode='lines',color=I("#145A32")) %>%
+            layout(
+                yaxis = list(title = "Numbers"),
+                updatemenus = list(
+                    list(
+                        y = 0.3,
+                        buttons = list(
+                            list(method = "restyle",
+                                 args = list("visible", list(TRUE, FALSE, FALSE)),
+                                 label = "Deaths"),
+                            list(method = "restyle",
+                                 args = list("visible", list(FALSE, TRUE, FALSE)),
+                                 label = "Cases"),
+                            list(method = "restyle",
+                                 args = list("visible", list(FALSE, FALSE, TRUE)),
+                                 label = "Recoveries")))
+                )
+            )
+    })
+    
+    # 2.1.2 country specific trend
+    output$country_trend <- renderPlotly({
+        filtered_dta %>% filter(country == input$country)%>%
+            plot_ly(x = ~date) %>%
+            add_trace(y = ~deaths, name = "Deaths", visible = T,type='scatter',mode='lines',color=I("#A93226")) %>%
+            add_trace(y = ~confirmed, name = "Cases", visible = F, type='scatter',mode='lines',color=I("#D4AC0D")) %>%
+            add_trace(y = ~recovered, name = "Recoveries", visible = F, type='scatter',mode='lines',color=I("#145A32")) %>%
+            layout(
+                yaxis = list(title = "Numbers"),
+                updatemenus = list(
+                    list(
+                         y = 0.3,
+                         buttons = list(
+                             list(method = "restyle",
+                                  args = list("visible", list(TRUE, FALSE, FALSE)),
+                                  label = "Deaths"),
+                             list(method = "restyle",
+                                  args = list("visible", list(FALSE, TRUE, FALSE)),
+                                  label = "Cases"),
+                             list(method = "restyle",
+                                  args = list("visible", list(FALSE, FALSE, TRUE)),
+                                  label = "Recoveries")))
+                )
+            )
+    })
+    
+    #2.1.4 disease progression
+    output$progression <- renderPlot({
+        plot_covid19_stripes(
+            filtered_dta,type = "confirmed",min_cases = 300,
+            sort_countries = "start"
         )
     })
-    output$w_deaths <- renderValueBox({
-        valueBox(
-            paste0(comma(sum(world_dta$Deaths))), "Total Deaths", icon = icon("skull"),
-            color = "red",width = 6
-        )
-    })
-    output$w_recoveries <- renderValueBox({
-        valueBox(
-            paste0(comma(sum(world_dta$Recoveries))), "Recoveries", icon = icon("plus"),
-            color = "purple", width = 6
-        )
-    })
+    
+    #3.maps 
+    
+    # 3.1 Total cases in their value boxes
     output$a_confirmed <- renderValueBox({
         valueBox(
             paste0(comma(sum(sumary_dta$Cases))), "Total Cases", icon = icon("hospital"),
@@ -220,29 +371,7 @@ server <- function(input, output) {
         )
     })
     
-    #plot the world data
-    output$worldplot <- renderPlot({
-        #Create a Progress object
-        progress <- shiny::Progress$new()
-        progress$set(message = "Computing data", value = 0)
-        # Close the progress when this reactive exits (even if there's an error)
-        on.exit(progress$close())
-        updateProgress <- function(value = NULL, detail = NULL) {
-            if (is.null(value)) {
-                value <- progress$getValue()
-                value <- value + (progress$getMax() - value) / 5
-            }
-            progress$set(value = value, detail = detail)
-        }
-        
-        # Compute the new data, and pass in the updateProgress function so
-        # that it can update the progress indicator.
-        compute_data(updateProgress)
-        map_covid19(merged_dta, type = "active", per_capita = TRUE, 
-                    cumulative = TRUE)
-    })
-    
-    #plot africa's data
+    # 3.2 africa's map
     output$africa <- renderPlot({
         #Create a Progress object
         progress <- shiny::Progress$new()
@@ -260,33 +389,93 @@ server <- function(input, output) {
         # Compute the new data, and pass in the updateProgress function so
         # that it can update the progress indicator.
         compute_data(updateProgress)
+        
+        #plot
         map_covid19(merged_dta, type = "confirmed", per_capita = TRUE, 
                     region = "Africa")
     })
     
-    #plot disease progression
-    output$progression <- renderPlot({
-        #Create a Progress object
-        progress <- shiny::Progress$new()
-        progress$set(message = "Computing data", value = 0)
-        # Close the progress when this reactive exits (even if there's an error)
-        on.exit(progress$close())
-        updateProgress <- function(value = NULL, detail = NULL) {
-            if (is.null(value)) {
-                value <- progress$getValue()
-                value <- value + (progress$getMax() - value) / 5
-            }
-            progress$set(value = value, detail = detail)
-        }
-        
-        # Compute the new data, and pass in the updateProgress function so
-        # that it can update the progress indicator.
-        compute_data(updateProgress)
-        plot_covid19_stripes(
-            filtered_dta,type = "confirmed",min_cases = 300,
-            sort_countries = "start"
-        )
+    # 3.3 middle east's map
+    output$mdd_east <- renderPlot({
+        map_covid19(merged_dta, type = "confirmed", per_capita = TRUE, 
+                    region = list(x = c(35, 100), y = c(-9, 70)))
     })
+    
+    # 4 contol measures
+    
+    # 4.1 scoial distancing measures
+    output$social_distancing <- renderPlot({
+        filtered_dta %>%
+            group_by(iso3c) %>%
+            summarise(
+                confirmed_cases = max(confirmed, na.rm = TRUE),
+                soc_dist_measures = max(soc_dist)
+            ) %>%
+            filter(confirmed_cases >= 1000) %>%
+            ggplot(df, mapping = aes(x = confirmed_cases,
+                                     y = soc_dist_measures)) +
+            geom_point() +
+            geom_label_repel(aes(label = iso3c)) +
+            scale_x_continuous(trans='log10', labels = comma)+
+            xlab('Confirmed Cases')+
+            ylab('Social Distancing Measures')
+    })
+    
+    # 4.2 movement restriction measures
+    output$mvt_restriction <- renderPlot({
+        filtered_dta %>%
+            group_by(iso3c) %>%
+            summarise(
+                confirmed_cases = max(confirmed, na.rm = TRUE),
+                restriction = max(mov_rest)
+            ) %>%
+            filter(confirmed_cases >= 1000) %>%
+            ggplot(df, mapping = aes(x = confirmed_cases,
+                                     y = restriction)) +
+            geom_point() +
+            geom_label_repel(aes(label = iso3c)) +
+            scale_x_continuous(trans='log10', labels = comma)+
+            xlab('Confirmed Cases')+
+            ylab('Movement Restriction')
+    })
+    
+    # 4.3 lock down measures
+    output$lock_down <- renderPlot({
+        filtered_dta %>%
+            group_by(iso3c) %>%
+            summarise(
+                confirmed_cases = max(confirmed, na.rm = TRUE),
+                lock_down = max(soc_dist)
+            ) %>%
+            filter(confirmed_cases >= 1000) %>%
+            ggplot(df, mapping = aes(x = confirmed_cases,
+                                     y = lock_down)) +
+            geom_point() +
+            geom_label_repel(aes(label = iso3c)) +
+            scale_x_continuous(trans='log10', labels = comma)+
+            xlab('Confirmed Cases')+
+            ylab('Lock Down Measures')
+    })
+    
+    # 4.4 public health policies
+    output$pub_health <- renderPlot({
+        filtered_dta %>%
+            group_by(iso3c) %>%
+            summarise(
+                confirmed_cases = max(confirmed, na.rm = TRUE),
+                pub_health = max(soc_dist)
+            ) %>%
+            filter(confirmed_cases >= 1000) %>%
+            ggplot(df, mapping = aes(x = confirmed_cases,
+                                     y = pub_health)) +
+            geom_point() +
+            geom_label_repel(aes(label = iso3c)) +
+            scale_x_continuous(trans='log10', labels = comma)+
+            xlab('Confirmed Cases')+
+            ylab('Public Health Policies')
+    })
+    
+    
     }
 
 shinyApp(ui, server)

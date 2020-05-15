@@ -1,0 +1,31 @@
+.main-header .logo {
+  font-family: "Georgia", Times, "Times New Roman", serif;
+  font-weight: bold;
+  font-size: 24px;
+}
+
+.box-header {text-align: center;}
+
+#dataTable tbody tr:nth-child(odd) {
+   background-color: #F5FFFA;
+}
+
+#dataTable tbody tr:nth-child(even) {
+   background-color: #E6E6FA;
+}
+
+#dataTable th {
+  background-color: #2874A6;
+  color: white;
+}
+
+.button{
+  background-color: black; /* Gray */
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+}
