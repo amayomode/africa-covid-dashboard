@@ -10,7 +10,7 @@ A dashboard providing data on the COVID-19 pandemic in Africa and the Middle Eas
   6. ggrepel
   7. DT
   8. scales
-  9.plotly
+  9. plotly
 
 #### Data Sources
   1. [Johns Hopkins University CSSE team on the spread of the SARS-CoV-2 virus](https://github.com/CSSEGISandData/COVID-19)
