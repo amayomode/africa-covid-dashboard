@@ -194,10 +194,10 @@ server <- function(input, output) {
     sumary_dta <- filtered_dta %>% 
         select(country, confirmed, deaths, recovered) %>% 
         group_by(country) %>% 
-        summarise(New_Cases =diff(tail(confirmed,3)[-3]), 
-                  Cases = tail(confirmed,2)[-2], 
-                  Deaths=tail(deaths,2)[-2], 
-                  Recoveries=tail(recovered,2)[-2])
+        summarise(New_Cases =diff(tail(confirmed,2)), 
+                  Cases = tail(confirmed,1), 
+                  Deaths=tail(deaths,1), 
+                  Recoveries=tail(recovered,1))
     
     #trend data
     plot_data <- filtered_dta %>% select(country,date, confirmed,deaths,recovered)%>%
@@ -211,7 +211,7 @@ server <- function(input, output) {
     # 1. Raw data
     
     # 1.1 render the data in a table
-    last_date <-  as.Date(tail(filtered_dta$date,2)[-2],format = "%m/%d/%y")
+    last_date <-  as.Date(tail(filtered_dta$date,1),format = "%m/%d/%y")
     output$dataTable <- renderDT(
         sumary_dta, # data
         class = "display nowrap compact", # style
